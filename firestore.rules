@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // غيّر الإيميل ده لإيميل الأدمن بتاعك
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.firebase.sign_in_provider == 'password'
+        && request.auth.token.email == 'ADMIN_EMAIL_HERE';
+    }
+    // الأسئلة: الكل يقرأ، الأدمن فقط يكتب
+    match /config/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    // كل محكم يقرأ ويكتب مستنده هو فقط، والأدمن يقرأ ويحذف الكل
+    match /judges/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, delete: if isAdmin();
+    }
+  }
+}
